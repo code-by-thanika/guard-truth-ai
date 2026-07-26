@@ -127,7 +127,7 @@ export const analyzeNews = createServerFn({ method: "POST" })
       if (data.predictionId) {
         await context.supabase
           .from("predictions")
-          .update({ explanation: safe as unknown as Record<string, unknown> })
+          .update({ explanation: safe as unknown as import("@/integrations/supabase/types").Json })
           .eq("id", data.predictionId)
           .eq("user_id", context.userId);
       }
