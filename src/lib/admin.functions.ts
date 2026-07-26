@@ -61,7 +61,11 @@ export const claimFirstAdmin = createServerFn({ method: "POST" })
 export const listUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context, context.userId);
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    assertAdmin(isAdmin);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ data: profiles }, { data: roles }, { data: predictions }] = await Promise.all([
@@ -94,7 +98,11 @@ export const listUsers = createServerFn({ method: "GET" })
 export const getAdminAnalytics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context, context.userId);
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    assertAdmin(isAdmin);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { loadActiveModel } = await import("./ml/registry.server");
 
@@ -166,7 +174,11 @@ export const retrainModel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => RetrainInput.parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context, context.userId);
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    assertAdmin(isAdmin);
 
     const { csvToDocuments } = await import("./ml/csv");
     const { trainAndEvaluate } = await import("./ml/nb");
@@ -223,7 +235,11 @@ export const activateModelVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context, context.userId);
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    assertAdmin(isAdmin);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("model_versions").update({ is_active: false }).eq("is_active", true);
     const { error } = await supabaseAdmin
