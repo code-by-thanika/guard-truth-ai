@@ -4,43 +4,15 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { z } from "zod";
+import {
+  AnalyzeInput,
+  ChatInput,
+  ClassifyInput,
+  HistoryInput,
+  IdInput,
+  OcrInput,
+} from "@/lib/schemas";
 
-const ClassifyInput = z.object({
-  text: z.string().trim().min(30, "Please provide at least 30 characters of news text.").max(20000),
-  source: z.enum(["typed", "pasted", "file", "image"]).default("typed"),
-});
-
-const AnalyzeInput = z.object({
-  predictionId: z.string().uuid().optional(),
-  text: z.string().trim().min(30).max(20000),
-  label: z.enum(["FAKE", "REAL"]),
-  confidence: z.number().min(0).max(100),
-  language: z.enum(["en", "hi"]).default("en"),
-});
-
-const OcrInput = z.object({
-  imageDataUrl: z.string().startsWith("data:image/").max(9_000_000),
-});
-
-const ChatInput = z.object({
-  messages: z
-    .array(
-      z.object({
-        role: z.enum(["user", "assistant"]),
-        content: z.string().trim().min(1).max(4000),
-      }),
-    )
-    .min(1)
-    .max(30),
-  language: z.enum(["en", "hi"]).default("en"),
-});
-
-const HistoryInput = z.object({
-  search: z.string().max(200).optional(),
-  filter: z.enum(["all", "FAKE", "REAL"]).default("all"),
-  limit: z.number().int().min(1).max(500).default(100),
-});
 
 /** Run the ML pipeline and store the result in the user's history. */
 export const classifyNews = createServerFn({ method: "POST" })
