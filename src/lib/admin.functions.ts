@@ -7,20 +7,8 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { z } from "zod";
+import { assertAdmin, IdInput, RetrainInput } from "@/lib/schemas";
 
-const RetrainInput = z.object({
-  fakeCsv: z.string().min(1).max(12_000_000),
-  trueCsv: z.string().min(1).max(12_000_000),
-  maxRowsPerClass: z.number().int().min(50).max(6000).default(2000),
-  alpha: z.number().min(0.01).max(2).default(0.4),
-  maxFeatures: z.number().int().min(500).max(20000).default(6000),
-});
-
-/** Throws unless the `has_role` check returned true for the admin role. */
-function assertAdmin(isAdmin: unknown) {
-  if (isAdmin !== true) throw new Error("Forbidden: admin access required.");
-}
 
 /** Is the current user an admin? Used to show/hide the admin nav item. */
 export const getMyRole = createServerFn({ method: "GET" })
