@@ -233,7 +233,7 @@ export const retrainModel = createServerFn({ method: "POST" })
 /** Activate a previously trained model version. */
 export const activateModelVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) => IdInput.parse(input))
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,

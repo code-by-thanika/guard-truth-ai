@@ -194,7 +194,7 @@ export const listPredictions = createServerFn({ method: "POST" })
 /** Delete one of the caller's own predictions. */
 export const deletePrediction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) => IdInput.parse(input))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("predictions")
