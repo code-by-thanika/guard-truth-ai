@@ -166,8 +166,8 @@ function DetectPage() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("detect.tokens")}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {result.topTokens.map((tk) => (
-                    <span key={tk.term} className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-                      {tk.term}
+                    <span key={tk.token} className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                      {tk.token}
                     </span>
                   ))}
                 </div>
