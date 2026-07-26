@@ -57,7 +57,7 @@ function Dashboard() {
         <StatCard label={t("dash.real")} value={data.realCount} icon={ShieldCheck} tone="success" />
         <StatCard
           label={t("dash.accuracy")}
-          value={`${data.modelAccuracy.toFixed(1)}%`}
+          value={`${(data.modelAccuracy ?? 0).toFixed(1)}%`}
           hint={`Avg confidence ${data.avgConfidence}%`}
           icon={Gauge}
           tone="warning"
