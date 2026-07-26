@@ -17,12 +17,9 @@ const RetrainInput = z.object({
   maxFeatures: z.number().int().min(500).max(20000).default(6000),
 });
 
-type AuthedContext = { supabase: { rpc: (fn: string, args: unknown) => PromiseLike<{ data: unknown }> } };
-
-/** Throws unless the caller holds the admin role. */
-async function assertAdmin(context: AuthedContext, userId: string) {
-  const { data } = await context.supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (data !== true) throw new Error("Forbidden: admin access required.");
+/** Throws unless the `has_role` check returned true for the admin role. */
+function assertAdmin(isAdmin: unknown) {
+  if (isAdmin !== true) throw new Error("Forbidden: admin access required.");
 }
 
 /** Is the current user an admin? Used to show/hide the admin nav item. */
