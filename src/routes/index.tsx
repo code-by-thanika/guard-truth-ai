@@ -131,7 +131,7 @@ function Landing() {
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex">
-                  <Link to="/auth">{t("nav.signIn")}</Link>
+                  <Link to="/auth" search={{ mode: "login" }}>{t("nav.signIn")}</Link>
                 </Button>
                 <Button variant="hero" size="sm" asChild>
                   <Link to="/auth" search={{ mode: "register" }}>
@@ -182,7 +182,7 @@ function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button variant="hero" size="lg" asChild>
-              <Link to={user ? "/detect" : "/auth"}>
+              <Link to={user ? "/detect" : "/auth"} search={user ? undefined : { mode: "login" }}>
                 {t("hero.cta")}
                 <ArrowRight className="size-4" />
               </Link>
