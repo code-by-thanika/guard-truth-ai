@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
+import { authErrorMessage } from "@/lib/auth-errors";
+
 
 const SearchSchema = z.object({
   mode: z.enum(["login", "register", "forgot"]).default("login"),
@@ -55,7 +57,7 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "register") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -64,8 +66,13 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Account created. You're signed in.");
-        navigate({ to: "/dashboard" });
+        if (data.session) {
+          toast.success("Account created. You're signed in.");
+          navigate({ to: "/dashboard", replace: true });
+        } else {
+          toast.success("Account created. Check your inbox to confirm your email, then sign in.");
+          navigate({ to: "/auth", search: { mode: "login" }, replace: true });
+        }
       } else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
@@ -75,10 +82,10 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/dashboard", replace: true });
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("common.error"));
+      toast.error(authErrorMessage(error));
     } finally {
       setBusy(false);
     }
@@ -86,17 +93,32 @@ function AuthPage() {
 
   async function handleGoogle() {
     setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        setBusy(false);
+        toast.error(authErrorMessage(result.error));
+        return;
+      }
+      if (result.redirected) return;
+      navigate({ to: "/dashboard", replace: true });
+    } catch (error) {
       setBusy(false);
-      toast.error("Google sign-in failed. Please try again.");
-      return;
+      toast.error(authErrorMessage(error));
     }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard" });
   }
+
+  if (sessionLoading || user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3">
+        <Spinner className="size-6" />
+        <p className="text-sm text-muted-foreground">Checking your session…</p>
+      </div>
+    );
+  }
+
 
   const title =
     mode === "register"
