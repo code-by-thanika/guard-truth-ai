@@ -4,11 +4,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState, type ReactNode } from "react";
 import { LayoutDashboard, ScanSearch, History, Bot, User, Shield, Moon, Sun, LogOut, Menu, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyRole } from "@/lib/admin.functions";
+import { authErrorMessage } from "@/lib/auth-errors";
 import { useI18n, type TranslationKey } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -36,10 +38,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   });
 
   async function handleSignOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", search: { mode: "login" }, replace: true });
+    try {
+      setOpen(false);
+      await queryClient.cancelQueries();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      queryClient.clear();
+      navigate({ to: "/auth", search: { mode: "login" }, replace: true });
+    } catch (error) {
+      toast.error(authErrorMessage(error));
+    }
   }
 
   const items = role?.isAdmin
@@ -115,13 +123,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {t(item.key)}
                 </Link>
               ))}
-              <button
+              <Button
+                variant="ghost"
                 onClick={handleSignOut}
-                className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-destructive hover:bg-destructive/10"
+                className="justify-start gap-3 px-3 py-2.5 text-left text-sm font-medium text-destructive hover:bg-destructive/10"
               >
                 <LogOut className="size-4" />
                 {t("nav.signOut")}
-              </button>
+              </Button>
             </nav>
           </div>
         )}

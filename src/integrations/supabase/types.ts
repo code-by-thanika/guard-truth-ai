@@ -160,6 +160,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_profile_for_user: {
+        Args: {
+          _avatar_url?: string
+          _email: string
+          _full_name?: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

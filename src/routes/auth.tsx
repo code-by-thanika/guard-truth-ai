@@ -14,6 +14,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
 import { authErrorMessage } from "@/lib/auth-errors";
+import { logAuthConfiguration } from "@/lib/auth-debug";
 
 
 const SearchSchema = z.object({
@@ -49,23 +50,35 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    logAuthConfiguration();
+  }, []);
+
+  useEffect(() => {
     if (!sessionLoading && user) navigate({ to: "/dashboard", replace: true });
   }, [navigate, sessionLoading, user]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = fullName.trim();
     try {
       if (mode === "register") {
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: normalizedEmail,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { full_name: fullName },
+            data: { full_name: normalizedName },
           },
         });
         if (error) throw error;
+        if (!data.user) throw new Error("Registration did not create an authenticated account.");
+        if (data.user.identities && data.user.identities.length === 0) {
+          toast.error("An account with this email already exists — sign in, reset your password, or use Google.");
+          navigate({ to: "/auth", search: { mode: "login" }, replace: true });
+          return;
+        }
         if (data.session) {
           toast.success("Account created. You're signed in.");
           navigate({ to: "/dashboard", replace: true });
@@ -74,14 +87,15 @@ function AuthPage() {
           navigate({ to: "/auth", search: { mode: "login" }, replace: true });
         }
       } else if (mode === "forgot") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
         toast.success("Reset link sent — check your inbox.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
         if (error) throw error;
+        if (!data.user) throw new Error("Login did not return an authenticated account.");
         navigate({ to: "/dashboard", replace: true });
       }
     } catch (error) {

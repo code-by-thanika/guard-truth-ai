@@ -1,4 +1,4 @@
-/** Client-side session hook backed by Supabase auth state. */
+/** Client-side session hook backed by persisted auth state. */
 import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,12 +18,27 @@ export function useSession() {
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-    });
+    void supabase.auth
+      .getSession()
+      .then(async ({ data }) => {
+        const { data: userData, error } = await supabase.auth.getUser();
+        if (!active) return;
+        if (error || !userData.user) {
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(data.session);
+          setUser(userData.user);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (!active) return;
+        if (import.meta.env.DEV) console.warn("[TruthGuard Auth] Session check failed", error);
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+      });
 
     return () => {
       active = false;
