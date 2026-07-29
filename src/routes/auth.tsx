@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
+import { authErrorMessage } from "@/lib/auth-errors";
+
 
 const SearchSchema = z.object({
   mode: z.enum(["login", "register", "forgot"]).default("login"),
