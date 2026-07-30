@@ -32,9 +32,8 @@ export const registerAccount = createServerFn({ method: "POST" })
 
     const { error: profileError } = await supabaseAdmin.rpc("ensure_profile_for_user", {
       _user_id: created.user.id,
-      _email: null,
+      _email: "",
       _full_name: data.fullName,
-      _avatar_url: null,
       _username: username,
     });
     if (profileError) {
