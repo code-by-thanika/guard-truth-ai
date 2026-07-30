@@ -59,7 +59,7 @@ export const listUsers = createServerFn({ method: "GET" })
     const [{ data: profiles }, { data: roles }, { data: predictions }] = await Promise.all([
       supabaseAdmin
         .from("profiles")
-        .select("id, email, full_name, language, created_at")
+        .select("id, username, full_name, language, created_at")
         .order("created_at", { ascending: false })
         .limit(500),
       supabaseAdmin.from("user_roles").select("user_id, role"),
@@ -70,7 +70,7 @@ export const listUsers = createServerFn({ method: "GET" })
       const own = (predictions ?? []).filter((p) => p.user_id === profile.id);
       return {
         id: profile.id,
-        email: profile.email,
+        username: profile.username,
         fullName: profile.full_name,
         language: profile.language,
         createdAt: profile.created_at,

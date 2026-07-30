@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.ensure_profile_for_user(uuid, text, text, text);

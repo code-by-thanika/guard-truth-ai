@@ -111,6 +111,7 @@ export type Database = {
           language: string
           theme: string
           updated_at: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -121,6 +122,7 @@ export type Database = {
           language?: string
           theme?: string
           updated_at?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -131,6 +133,7 @@ export type Database = {
           language?: string
           theme?: string
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -160,6 +163,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_profile_for_user: {
+        Args: {
+          _avatar_url?: string
+          _email: string
+          _full_name?: string
+          _user_id: string
+          _username?: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
