@@ -36,11 +36,11 @@ export const Route = createFileRoute("/")({
         content:
           "Detect fake news in seconds. TruthGuard AI pairs a Naïve Bayes + TF-IDF classifier with AI explanations, OCR and analytics.",
       },
-      { property: "og:title", content: "TruthGuard AI — Fake News Detection with Naïve Bayes" },
+      { property: "og:title", content: "TruthGuard AI — Fake News Detection" },
       {
         property: "og:description",
         content:
-          "Detect fake news in seconds. TruthGuard AI pairs a Naïve Bayes + TF-IDF classifier with AI explanations, OCR and analytics.",
+          "A Naïve Bayes fake-news detector with AI explanations, image OCR, prediction history and dashboards.",
       },
     ],
   }),

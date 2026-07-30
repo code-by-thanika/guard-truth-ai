@@ -81,21 +81,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "TruthGuard AI — Fake News Detection with Naïve Bayes" },
+      { title: "TruthGuard AI — Fake News Detection" },
       {
         name: "description",
         content:
-          "Detect fake news in seconds. TruthGuard AI pairs a Naïve Bayes + TF-IDF classifier with AI explanations, OCR and analytics.",
+          "TruthGuard AI detects fake news with a Naïve Bayes + TF-IDF classifier and explains every verdict.",
       },
       { name: "author", content: "TruthGuard AI" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:title", content: "TruthGuard AI — Fake News Detection with Naïve Bayes" },
-      { name: "twitter:title", content: "TruthGuard AI — Fake News Detection with Naïve Bayes" },
-      { property: "og:description", content: "Detect fake news in seconds. TruthGuard AI pairs a Naïve Bayes + TF-IDF classifier with AI explanations, OCR and analytics." },
-      { name: "twitter:description", content: "Detect fake news in seconds. TruthGuard AI pairs a Naïve Bayes + TF-IDF classifier with AI explanations, OCR and analytics." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/19c29d22-c62d-4ddd-9437-d36a0c9290e0/id-preview-3804a7b9--512c0d1c-b3e0-4247-a78a-4f75aa170d6f.lovable.app-1785161259903.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/19c29d22-c62d-4ddd-9437-d36a0c9290e0/id-preview-3804a7b9--512c0d1c-b3e0-4247-a78a-4f75aa170d6f.lovable.app-1785161259903.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

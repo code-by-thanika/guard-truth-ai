@@ -13,9 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
-import { authErrorMessage } from "@/lib/auth-errors";
-import { logAuthConfiguration } from "@/lib/auth-debug";
-
 
 const SearchSchema = z.object({
   mode: z.enum(["login", "register", "forgot"]).default("login"),
@@ -50,56 +47,38 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    logAuthConfiguration();
-  }, []);
-
-  useEffect(() => {
     if (!sessionLoading && user) navigate({ to: "/dashboard", replace: true });
   }, [navigate, sessionLoading, user]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedName = fullName.trim();
     try {
       if (mode === "register") {
-        const { data, error } = await supabase.auth.signUp({
-          email: normalizedEmail,
+        const { error } = await supabase.auth.signUp({
+          email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { full_name: normalizedName },
+            data: { full_name: fullName },
           },
         });
         if (error) throw error;
-        if (!data.user) throw new Error("Registration did not create an authenticated account.");
-        if (data.user.identities && data.user.identities.length === 0) {
-          toast.error("An account with this email already exists — sign in, reset your password, or use Google.");
-          navigate({ to: "/auth", search: { mode: "login" }, replace: true });
-          return;
-        }
-        if (data.session) {
-          toast.success("Account created. You're signed in.");
-          navigate({ to: "/dashboard", replace: true });
-        } else {
-          toast.success("Account created. Check your inbox to confirm your email, then sign in.");
-          navigate({ to: "/auth", search: { mode: "login" }, replace: true });
-        }
+        toast.success("Account created. You're signed in.");
+        navigate({ to: "/dashboard" });
       } else if (mode === "forgot") {
-        const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
         if (error) throw error;
         toast.success("Reset link sent — check your inbox.");
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        if (!data.user) throw new Error("Login did not return an authenticated account.");
-        navigate({ to: "/dashboard", replace: true });
+        navigate({ to: "/dashboard" });
       }
     } catch (error) {
-      toast.error(authErrorMessage(error));
+      toast.error(error instanceof Error ? error.message : t("common.error"));
     } finally {
       setBusy(false);
     }
@@ -107,32 +86,17 @@ function AuthPage() {
 
   async function handleGoogle() {
     setBusy(true);
-    try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-      if (result.error) {
-        setBusy(false);
-        toast.error(authErrorMessage(result.error));
-        return;
-      }
-      if (result.redirected) return;
-      navigate({ to: "/dashboard", replace: true });
-    } catch (error) {
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
       setBusy(false);
-      toast.error(authErrorMessage(error));
+      toast.error("Google sign-in failed. Please try again.");
+      return;
     }
+    if (result.redirected) return;
+    navigate({ to: "/dashboard" });
   }
-
-  if (sessionLoading || user) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3">
-        <Spinner className="size-6" />
-        <p className="text-sm text-muted-foreground">Checking your session…</p>
-      </div>
-    );
-  }
-
 
   const title =
     mode === "register"
