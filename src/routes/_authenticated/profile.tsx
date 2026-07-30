@@ -76,7 +76,18 @@ function ProfilePage() {
             ))}
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">{data?.email}</p>
+        <dl className="grid gap-1 text-sm">
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">{t("profile.username")}</dt>
+            <dd className="font-medium">{data?.username ?? "—"}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">{t("profile.registered")}</dt>
+            <dd className="font-medium">
+              {data?.created_at ? new Date(data.created_at).toLocaleDateString() : "—"}
+            </dd>
+          </div>
+        </dl>
         <Button variant="hero" disabled={mutation.isPending || fullName.trim().length === 0} onClick={() => mutation.mutate()}>
           {mutation.isPending ? <Spinner className="size-4 border-primary-foreground/40 border-t-primary-foreground" /> : <Save className="size-4" />}
           {t("profile.save")}
