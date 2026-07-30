@@ -187,7 +187,7 @@ function AdminPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Username</th>
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Roles</th>
                   <th className="px-4 py-3">Predictions</th>
@@ -196,7 +196,7 @@ function AdminPage() {
               <tbody className="divide-y divide-border/70">
                 {users.data.map((u) => (
                   <tr key={u.id}>
-                    <td className="px-4 py-3">{u.email}</td>
+                    <td className="px-4 py-3">{u.username ?? "—"}</td>
                     <td className="px-4 py-3">{u.fullName ?? "—"}</td>
                     <td className="px-4 py-3">{u.roles.join(", ") || "user"}</td>
                     <td className="px-4 py-3 tabular-nums">
