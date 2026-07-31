@@ -1,35 +1,25 @@
-/** Client-side session hook backed by Supabase auth state. */
-import { useEffect, useState } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+/** Client-side session hook backed by the local (localStorage) user store. */
+import { useCallback, useEffect, useState } from "react";
+import { SESSION_EVENT, getCurrentUser, type LocalUser } from "@/lib/local-db";
 
 export function useSession() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<LocalUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let active = true;
-
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (!active) return;
-      setSession(next);
-      setUser(next?.user ?? null);
-      setLoading(false);
-    });
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => {
-      active = false;
-      subscription.subscription.unsubscribe();
-    };
+  const sync = useCallback(() => {
+    setUser(getCurrentUser());
+    setLoading(false);
   }, []);
 
-  return { session, user, loading };
+  useEffect(() => {
+    sync();
+    window.addEventListener(SESSION_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(SESSION_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [sync]);
+
+  return { user, loading };
 }

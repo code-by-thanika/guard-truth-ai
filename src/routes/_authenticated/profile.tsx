@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Save } from "lucide-react";
@@ -9,7 +8,7 @@ import { LoadingBlock, Spinner } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getProfile, updateProfile } from "@/lib/profile.functions";
+import { getProfile, updateProfile } from "@/lib/local-api";
 import { useI18n, type Language } from "@/lib/i18n";
 import { useTheme, type Theme } from "@/lib/theme";
 
@@ -28,10 +27,8 @@ export const Route = createFileRoute("/_authenticated/profile")({
 function ProfilePage() {
   const { t, language, setLanguage } = useI18n();
   const { theme, setTheme } = useTheme();
-  const fetchProfile = useServerFn(getProfile);
-  const save = useServerFn(updateProfile);
 
-  const { data, isLoading } = useQuery({ queryKey: ["profile"], queryFn: () => fetchProfile() });
+  const { data, isLoading } = useQuery({ queryKey: ["profile"], queryFn: () => getProfile() });
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
@@ -40,7 +37,7 @@ function ProfilePage() {
 
   const mutation = useMutation({
     mutationFn: () =>
-      save({ data: { fullName: fullName.trim(), language: language as Language, theme: theme as Theme } }),
+      updateProfile({ fullName: fullName.trim(), language: language as Language, theme: theme as Theme }),
     onSuccess: () => toast.success(t("profile.saved")),
     onError: (error) => toast.error(error instanceof Error ? error.message : t("common.error")),
   });

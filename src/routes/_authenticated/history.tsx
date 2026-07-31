@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Download, Search, Trash2 } from "lucide-react";
@@ -8,7 +7,7 @@ import { Download, Search, Trash2 } from "lucide-react";
 import { LoadingBlock } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { deletePrediction, listPredictions } from "@/lib/detection.functions";
+import { deletePrediction, listPredictions } from "@/lib/local-api";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/history")({
@@ -31,16 +30,14 @@ function HistoryPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
 
-  const fetchList = useServerFn(listPredictions);
-  const removeOne = useServerFn(deletePrediction);
 
   const { data, isLoading } = useQuery({
     queryKey: ["history", search, filter],
-    queryFn: () => fetchList({ data: { search, filter, limit: 200 } }),
+    queryFn: () => listPredictions({ search, filter, limit: 200 }),
   });
 
   const del = useMutation({
-    mutationFn: (id: string) => removeOne({ data: { id } }),
+    mutationFn: (id: string) => deletePrediction(id),
     onSuccess: () => {
       toast.success("Deleted");
       queryClient.invalidateQueries({ queryKey: ["history"] });

@@ -8,7 +8,8 @@ import { FileText, ImageIcon, Sparkles, Upload } from "lucide-react";
 import { Spinner } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { analyzeNews, classifyNews, extractTextFromImage, type AiAnalysis } from "@/lib/detection.functions";
+import { analyzeNews, extractTextFromImage, type AiAnalysis } from "@/lib/ai.functions";
+import { classifyNews } from "@/lib/local-api";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/detect")({
@@ -33,13 +34,12 @@ function DetectPage() {
   const [result, setResult] = useState<Awaited<ReturnType<typeof classifyNews>> | null>(null);
   const [analysis, setAnalysis] = useState<AiAnalysis | null>(null);
 
-  const classify = useServerFn(classifyNews);
   const analyze = useServerFn(analyzeNews);
   const ocr = useServerFn(extractTextFromImage);
 
   const run = useMutation({
     mutationFn: async () => {
-      const prediction = await classify({ data: { text, source } });
+      const prediction = await classifyNews({ text, source });
       setResult(prediction);
       setAnalysis(null);
       const ai = await analyze({

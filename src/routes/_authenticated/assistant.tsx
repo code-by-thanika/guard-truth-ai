@@ -8,7 +8,7 @@ import { Send, Bot, User } from "lucide-react";
 import { Spinner } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { chatWithAssistant } from "@/lib/detection.functions";
+import { chatWithAssistant } from "@/lib/ai.functions";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/assistant")({

@@ -1,14 +1,12 @@
 /** Authenticated app shell: top navigation, theme/language switch, sign out. */
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState, type ReactNode } from "react";
 import { LayoutDashboard, ScanSearch, History, Bot, User, Shield, Moon, Sun, LogOut, Menu, X } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { getMyRole } from "@/lib/admin.functions";
+import { getMyRole, logout } from "@/lib/local-api";
 import { useI18n, type TranslationKey } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -28,17 +26,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  const fetchRole = useServerFn(getMyRole);
   const { data: role } = useQuery({
     queryKey: ["my-role"],
-    queryFn: () => fetchRole(),
+    queryFn: () => getMyRole(),
     staleTime: 60_000,
   });
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
+    logout();
     navigate({ to: "/auth", search: { mode: "login" }, replace: true });
   }
 

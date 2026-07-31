@@ -3,18 +3,16 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { ArrowLeft, Lock, User as UserIcon, AtSign } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
 
 import { Logo } from "@/components/Logo";
 import { Spinner } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/hooks/use-session";
-import { registerAccount } from "@/lib/auth.functions";
-import { RegisterInput, usernameToLoginEmail } from "@/lib/auth-shared";
+import { loginWithPassword, registerAccount } from "@/lib/local-api";
+import { RegisterInput } from "@/lib/auth-shared";
 
 const SearchSchema = z.object({
   mode: z.enum(["login", "register"]).default("login"),
@@ -42,7 +40,6 @@ function AuthPage() {
   const { mode } = Route.useSearch();
   const navigate = useNavigate();
   const { user, loading: sessionLoading } = useSession();
-  const register = useServerFn(registerAccount);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -61,17 +58,17 @@ function AuthPage() {
       if (mode === "register") {
         if (password !== confirmPassword) throw new Error(t("auth.mismatch"));
         const parsed = RegisterInput.parse({ fullName, username, password });
-        await register({ data: parsed });
+        await registerAccount(parsed);
         toast.success(t("auth.registered"));
         setPassword("");
         setConfirmPassword("");
         navigate({ to: "/auth", search: { mode: "login" } });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: usernameToLoginEmail(username),
-          password,
-        });
-        if (error) throw new Error(t("auth.invalid"));
+        try {
+          await loginWithPassword(username, password);
+        } catch {
+          throw new Error(t("auth.invalid"));
+        }
         navigate({ to: "/dashboard" });
       }
     } catch (error) {

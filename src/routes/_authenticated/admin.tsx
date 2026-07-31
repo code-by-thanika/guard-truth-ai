@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Users, Activity, ShieldAlert, Gauge, Upload, Shield } from "lucide-react";
@@ -15,7 +14,7 @@ import {
   getMyRole,
   listUsers,
   retrainModel,
-} from "@/lib/admin.functions";
+} from "@/lib/local-api";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -33,24 +32,18 @@ export const Route = createFileRoute("/_authenticated/admin")({
 function AdminPage() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const fetchRole = useServerFn(getMyRole);
-  const claim = useServerFn(claimFirstAdmin);
-  const fetchAnalytics = useServerFn(getAdminAnalytics);
-  const fetchUsers = useServerFn(listUsers);
-  const train = useServerFn(retrainModel);
-  const activate = useServerFn(activateModelVersion);
 
   const [fakeCsv, setFakeCsv] = useState("");
   const [trueCsv, setTrueCsv] = useState("");
 
-  const role = useQuery({ queryKey: ["my-role"], queryFn: () => fetchRole() });
+  const role = useQuery({ queryKey: ["my-role"], queryFn: () => getMyRole() });
   const isAdmin = role.data?.isAdmin === true;
 
-  const analytics = useQuery({ queryKey: ["admin-analytics"], queryFn: () => fetchAnalytics(), enabled: isAdmin });
-  const users = useQuery({ queryKey: ["admin-users"], queryFn: () => fetchUsers(), enabled: isAdmin });
+  const analytics = useQuery({ queryKey: ["admin-analytics"], queryFn: () => getAdminAnalytics(), enabled: isAdmin });
+  const users = useQuery({ queryKey: ["admin-users"], queryFn: () => listUsers(), enabled: isAdmin });
 
   const claimAdmin = useMutation({
-    mutationFn: () => claim(),
+    mutationFn: () => claimFirstAdmin(),
     onSuccess: (res) => {
       if (res.ok) {
         toast.success("You are now an administrator.");
@@ -60,7 +53,7 @@ function AdminPage() {
   });
 
   const retrain = useMutation({
-    mutationFn: () => train({ data: { fakeCsv, trueCsv, maxRowsPerClass: 2000, alpha: 0.4, maxFeatures: 6000 } }),
+    mutationFn: () => retrainModel({ fakeCsv, trueCsv, maxRowsPerClass: 2000, alpha: 0.4, maxFeatures: 6000 }),
     onSuccess: (res) => {
       if (res.ok) {
         toast.success(`Trained ${res.version} — accuracy ${res.metrics.accuracy.toFixed(2)}%`);
@@ -71,7 +64,7 @@ function AdminPage() {
   });
 
   const setActive = useMutation({
-    mutationFn: (id: string) => activate({ data: { id } }),
+    mutationFn: (id: string) => activateModelVersion(id),
     onSuccess: () => {
       toast.success("Model activated");
       queryClient.invalidateQueries();
