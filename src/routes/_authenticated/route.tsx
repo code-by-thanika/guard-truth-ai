@@ -1,14 +1,14 @@
-/** Client-only auth gate: everything under /_authenticated requires a session. */
+/** Client-only auth gate: everything under /_authenticated requires a local session. */
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { getCurrentUser } from "@/lib/local-db";
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth", search: { mode: "login" } });
-    return { user: data.user };
+  beforeLoad: () => {
+    const user = getCurrentUser();
+    if (!user) throw redirect({ to: "/auth", search: { mode: "login" } });
+    return { user };
   },
   component: () => (
     <AppShell>
