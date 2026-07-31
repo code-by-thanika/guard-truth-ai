@@ -1,13 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Activity, ShieldAlert, ShieldCheck, Gauge, ArrowRight } from "lucide-react";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 import { StatCard } from "@/components/StatCard";
 import { LoadingBlock } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
-import { getDashboardStats } from "@/lib/detection.functions";
+import { getDashboardStats } from "@/lib/local-api";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -24,8 +23,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const { t } = useI18n();
-  const fetchStats = useServerFn(getDashboardStats);
-  const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => fetchStats() });
+  const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => getDashboardStats() });
 
   if (isLoading || !data) return <LoadingBlock label={t("common.loading")} />;
 
