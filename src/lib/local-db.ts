@@ -5,7 +5,8 @@
  * `localStorage`, so the app runs in Lovable Preview and on Vercel with no
  * backend, no environment variables and no Supabase configuration.
  */
-import type { NaiveBayesModel, TrainingMetrics } from "./ml/nb";
+import { trainAndEvaluate, type NaiveBayesModel, type TrainingMetrics } from "./ml/nb";
+import { SEED_CORPUS } from "./ml/seed-corpus";
 
 const PREFIX = "truthguard.";
 export const KEYS = {
@@ -175,9 +176,6 @@ let seedModel: { model: NaiveBayesModel; metrics: TrainingMetrics } | null = nul
 /** Train the bootstrap seed model once per page session. */
 export function getSeedModel() {
   if (!seedModel) {
-    // Lazily required so the seed corpus is only parsed when needed.
-    const { SEED_CORPUS } = require("./ml/seed-corpus") as typeof import("./ml/seed-corpus");
-    const { trainAndEvaluate } = require("./ml/nb") as typeof import("./ml/nb");
     seedModel = trainAndEvaluate(SEED_CORPUS, {
       alpha: 0.4,
       maxFeatures: 4000,
