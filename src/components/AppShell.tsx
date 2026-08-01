@@ -1,12 +1,14 @@
 /** Authenticated app shell: top navigation, theme/language switch, sign out. */
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { LayoutDashboard, ScanSearch, History, Bot, User, Shield, Moon, Sun, LogOut, Menu, X } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { getMyRole, logout } from "@/lib/local-api";
+import { openAiSession } from "@/lib/ai.functions";
+import { useSession } from "@/hooks/use-session";
 import { useI18n, type TranslationKey } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -25,6 +27,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const { user } = useSession();
+
+  // Hand the signed-in account to the server so the AI endpoints get a
+  // server-verified session cookie (they reject anonymous callers).
+  useEffect(() => {
+    if (!user) return;
+    void openAiSession({ data: { userId: user.id, username: user.username } }).catch(() => {});
+  }, [user?.id, user?.username]);
 
   const { data: role } = useQuery({
     queryKey: ["my-role"],
