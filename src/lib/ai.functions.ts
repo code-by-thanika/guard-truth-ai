@@ -3,7 +3,22 @@
  * Used for verdict explanations, OCR text extraction and the assistant chat.
  */
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { AnalyzeInput, ChatInput, OcrInput } from "@/lib/schemas";
+
+const SessionInput = z.object({
+  userId: z.string().uuid(),
+  username: z.string().trim().min(1).max(40),
+});
+
+/** Mint the server-signed session cookie required by the AI endpoints. */
+export const openAiSession = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => SessionInput.parse(input))
+  .handler(async ({ data }) => {
+    const { issueAiSession } = await import("./ai-session.server");
+    await issueAiSession(data.userId, data.username);
+    return { ok: true as const };
+  });
 
 export interface AiAnalysis {
   explanation: string;
@@ -18,6 +33,8 @@ export const analyzeNews = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => AnalyzeInput.parse(input))
   .handler(async ({ data }) => {
     const { callAiJson, AiError } = await import("./ai.server");
+    const { requireAiSession } = await import("./ai-session.server");
+    await requireAiSession();
     const languageName = data.language === "hi" ? "Hindi (Devanagari script)" : "English";
 
     try {
@@ -61,6 +78,8 @@ export const extractTextFromImage = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => OcrInput.parse(input))
   .handler(async ({ data }) => {
     const { callAi, AiError } = await import("./ai.server");
+    const { requireAiSession } = await import("./ai-session.server");
+    await requireAiSession();
     try {
       const text = await callAi([
         {
@@ -93,6 +112,8 @@ export const chatWithAssistant = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ChatInput.parse(input))
   .handler(async ({ data }) => {
     const { callAi, AiError } = await import("./ai.server");
+    const { requireAiSession } = await import("./ai-session.server");
+    await requireAiSession();
     const languageName = data.language === "hi" ? "Hindi (Devanagari script)" : "English";
     try {
       const reply = await callAi([
