@@ -18,39 +18,80 @@ export interface AiMessage {
 
 export class AiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
-    super(message);
+  detail: string;
+  constructor(status: number, message: string, detail = "") {
+    super(detail ? `${message} (HTTP ${status}: ${detail})` : message);
     this.status = status;
+    this.detail = detail;
+  }
+}
+
+/** Map a gateway HTTP status to a user-facing cause. */
+function describeStatus(status: number): string {
+  switch (status) {
+    case 401:
+      return "AI authentication failed (401) — the LOVABLE_API_KEY is missing, invalid or not deployed.";
+    case 402:
+      return "AI credits exhausted (402) — add credits to this workspace to continue.";
+    case 403:
+      return "AI access forbidden (403) — this key is not allowed to use the requested model.";
+    case 429:
+      return "AI rate limit reached (429) — please try again in a moment.";
+    case 400:
+      return "The AI request was rejected (400) — invalid model or request body.";
+    default:
+      return status >= 500
+        ? `AI provider error (${status}) — the service is temporarily unavailable.`
+        : `AI request failed (${status}).`;
   }
 }
 
 /** Call the gateway and return the assistant text. */
 export async function callAi(messages: AiMessage[], model = DEFAULT_MODEL): Promise<string> {
   const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new AiError(500, "AI is not configured (missing key).");
+  if (!key) {
+    throw new AiError(
+      401,
+      "AI is not configured — LOVABLE_API_KEY is missing from the server environment.",
+    );
+  }
 
-  const response = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Lovable-API-Key": key,
-    },
-    body: JSON.stringify({ model, messages }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Lovable-API-Key": key,
+      },
+      body: JSON.stringify({ model, messages }),
+    });
+  } catch (networkError) {
+    console.error("[ai] network failure calling gateway", networkError);
+    throw new AiError(
+      0,
+      "Could not reach the AI service (network error).",
+      networkError instanceof Error ? networkError.message : String(networkError),
+    );
+  }
 
   if (!response.ok) {
-    const body = await response.text();
+    const body = (await response.text()).slice(0, 500);
     console.error(`[ai] gateway error ${response.status}: ${body}`);
-    if (response.status === 429) throw new AiError(429, "AI rate limit reached. Try again shortly.");
-    if (response.status === 402) throw new AiError(402, "AI credits exhausted for this workspace.");
-    throw new AiError(response.status, "The AI service is temporarily unavailable.");
+    throw new AiError(response.status, describeStatus(response.status), body);
   }
 
   const payload = (await response.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
   };
-  return payload.choices?.[0]?.message?.content ?? "";
+  const content = payload.choices?.[0]?.message?.content;
+  if (!content) {
+    console.error("[ai] empty gateway response", JSON.stringify(payload).slice(0, 500));
+    throw new AiError(502, "The AI service returned an empty response.");
+  }
+  return content;
 }
+
 
 /** Ask the model for JSON and parse it defensively. */
 export async function callAiJson<T>(messages: AiMessage[], model = DEFAULT_MODEL): Promise<T> {

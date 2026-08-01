@@ -48,7 +48,9 @@ export const analyzeNews = createServerFn({ method: "POST" })
       return { ok: true as const, analysis: safe };
     } catch (error) {
       const message =
-        error instanceof AiError ? error.message : "Could not generate the AI analysis right now.";
+        error instanceof AiError
+          ? error.message
+          : `Could not generate the AI analysis: ${error instanceof Error ? error.message : String(error)}`;
       console.error("[ai] analyze failed", error);
       return { ok: false as const, error: message };
     }
@@ -78,7 +80,9 @@ export const extractTextFromImage = createServerFn({ method: "POST" })
       return { ok: true as const, text: text.trim() };
     } catch (error) {
       const message =
-        error instanceof AiError ? error.message : "Could not read text from that image.";
+        error instanceof AiError
+          ? error.message
+          : `Could not read text from that image: ${error instanceof Error ? error.message : String(error)}`;
       console.error("[ocr] failed", error);
       return { ok: false as const, error: message, text: "" };
     }
@@ -103,7 +107,10 @@ export const chatWithAssistant = createServerFn({ method: "POST" })
       ]);
       return { ok: true as const, reply };
     } catch (error) {
-      const message = error instanceof AiError ? error.message : "The assistant is unavailable.";
+      const message =
+        error instanceof AiError
+          ? error.message
+          : `The assistant is unavailable: ${error instanceof Error ? error.message : String(error)}`;
       console.error("[chat] failed", error);
       return { ok: false as const, error: message, reply: "" };
     }
